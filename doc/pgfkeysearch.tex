@@ -1,0 +1,86 @@
+%%%==============================================================================
+%% Copyright 2023 by Alceu Frigeri
+%%
+%% This work may be distributed and/or modified under the conditions of
+%%
+%% * The [LaTeX Project Public License](http://www.latex-project.org/lppl.txt),
+%%   version 1.3c (or later), and/or
+%% * The [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.html),
+%%   version 3 (or later)
+%%
+%% This work has the LPPL maintenance status *maintained*.
+%%
+%% The Current Maintainer of this work is Alceu Frigeri
+%%
+%% This is version {1.5} {2023/11/28}
+%%
+%% The list of files that compose this work can be found in the README.md file at
+%% https://ctan.org/pkg/starray
+%%
+%%%==============================================================================
+\documentclass[10pt]{article}
+\RequirePackage[verbose,a4paper,marginparwidth=27.5mm,top=2.5cm,bottom=1.5cm,hmargin={40mm,20mm},marginparsep=2.5mm,columnsep=10mm,asymmetric]{geometry}
+\usepackage{codedescribe}
+\usepackage{pgfkeysearch}
+\RequirePackage[inline]{enumitem}
+\SetEnumitemKey{miditemsep}{parsep=0ex,itemsep=0.4ex}
+
+\RequirePackage{pgfkeys}
+
+\RequirePackage[hidelinks,hypertexnames=false]{hyperref}
+\begin{document}
+\tstitle{
+  author={Alceu Frigeri\footnote{\tsverb{https://github.com/alceu-frigeri/pgfkeysearch}}},
+  date={\tsdate},
+  title={A Search Extension for pgfkeys\break Version \PkgInfo{pgfkeysearch}{version}}
+  }
+  
+\begin{typesetabstract}
+
+The command \tsobj{\pgfkeysvalueof}, unlike other \tsobj{\pgfkeys} commands, doesn't have a \tsobj[keys]{.unknown} handler, or offers the option to search for a key.
+That's exactly the aim of this, by having a way to find a key in a given path (or collection of paths).
+\end{typesetabstract}
+
+
+\section{Searching for a key}
+\begin{codedescribe}{\pgfkeysearchvalueof,\pgfkeysearchvalueofTF}
+\begin{codesyntax}%
+\tsmacro{\pgfkeysearchvalueof}{path-list,key,macro}
+\tsmacro{\pgfkeysearchvalueofTF}{path-list,key,macro,if-found,if-not}
+\end{codesyntax}
+\tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one was found).
+
+For instance, given a path /A/B/C/D it will look first at /A/B/C/D/\tsobj[marg]{key}, them /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key},
+Stopping at the first hit, returning the value found in the \tsobj[marg]{macro}.
+The branch version will also execute either \tsobj[marg,sep={or}]{if-found,if-not}.
+  
+\end{codedescribe}
+\begin{tsremark}
+  Those commands aren't expandable, that's the reason to have them storing the key value in a macro and not just 'placing the value in the input stream'.
+\end{tsremark}
+
+\begin{codestore}[keyval.demo]
+ \pgfkeys{/tikz/A/.cd,
+  keyA/.initial={A keyA}, 
+  keyB/.initial={A keyB},
+  B/.cd,
+  keyA/.initial={B keyA},
+  keyC/.initial={B keyC},
+  C/.cd,
+  keyX/.initial={C keyX} }
+ \pgfkeysearchvalueof{/tikz/A/B/C}{keyA}{\VALkeyA}
+ \pgfkeysearchvalueof{/tikz/A/B/C}{keyB}{\VALkeyB}
+ \pgfkeysearchvalueof{/tikz/A/B/C}{keyC}{\VALkeyC}
+ \pgfkeysearchvalueof{/tikz/A/B/C}{keyX}{\VALkeyX}
+ 
+ I got for keyA: \textbf{\VALkeyA} \par
+ I got for keyB: \textbf{\VALkeyB} \par
+ I got for keyC: \textbf{\VALkeyC} \par
+ I got for keyX: \textbf{\VALkeyX} \par
+ 
+\end{codestore}
+
+\tsdemo[emph={pgfkeysearchvalueof}]{keyval.demo}
+
+
+\end{document}

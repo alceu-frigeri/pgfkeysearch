@@ -37,3 +37,7 @@ The Current Maintainer of this work is Alceu Frigeri
 
 * Version 1.0
     - Initial setup.
+
+* Version 1.1
+    - More typos.
+    - exposing a single Expl3 command.

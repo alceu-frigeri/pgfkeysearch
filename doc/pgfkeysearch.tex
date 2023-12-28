@@ -12,7 +12,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.5} {2023/11/28}
+%% This is version {1.5} {2023/12/29}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -51,7 +51,7 @@ That's exactly the aim of this, by having a way to find a key in a given path (o
 \tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one was found).
 
 For instance, given a path /A/B/C/D it will look first at /A/B/C/D/\tsobj[marg]{key}, them /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key},
-Stopping at the first hit, returning the value found in the \tsobj[marg]{macro}.
+stopping at the first hit, returning the value found in the \tsobj[marg]{macro}.
 The branch version will also execute either \tsobj[marg,sep={or}]{if-found,if-not}.
   
 \end{codedescribe}
@@ -82,5 +82,13 @@ The branch version will also execute either \tsobj[marg,sep={or}]{if-found,if-no
 
 \tsdemo[emph={pgfkeysearchvalueof}]{keyval.demo}
 
+\section{Expl3 Base Command}
+\begin{codedescribe}{\pgfkeysearch_multipath_keysearch:nnnTF}
+\begin{codesyntax}%
+\tsmacro{\pgfkeysearch_multipath_keysearch:nnnTF}{path-list,key,macro,if-found,if-not}
+\end{codesyntax}
+That's the \tsobj[pkg]{Expl3} version of it (for package writers). In fact, the \tsobj{\pgfkeysearchvalueof} is just a wrapper to this one.
+\end{codedescribe}
 
-\end{document}
+
+\end{document} 

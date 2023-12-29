@@ -34,11 +34,28 @@ This work has the LPPL maintenance status *maintained*.
 
 The Current Maintainer of this work is Alceu Frigeri
 
+-------------
+## This work consist of the files
 
-* Version 1.0
-    - Initial setup.
+* pgfkeysearch.sty
+    - the package itself
 
-* Version 1.1
+* README.md  (this file)
+    - quick introduction
+
+* pgfkeysearch.tex
+    - pakcage documentation
+* pgfkeysearch.pdf
+    - documentation in PDF format
+    
+-------------
+
+## Changelog
+
+* Version 1.1 (this)
     - More typos.
     - renamed some internal variables to better follow the expl3 recommendations. 
     - exposing the Expl3 commands.
+
+* Version 1.0
+    - Initial setup.

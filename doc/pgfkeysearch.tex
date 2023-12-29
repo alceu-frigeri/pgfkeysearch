@@ -61,34 +61,31 @@ The branch version will also execute either \tsobj[marg,sep={or}]{if-found,if-no
 
 \begin{codestore}[keyval.demo]
  \pgfkeys{/tikz/A/.cd,
-  keyA/.initial={A keyA}, 
-  keyB/.initial={A keyB},
+  keyA/.initial={keyA at /tikz/A}, 
+  keyB/.initial={keyB at /tikz/A},
   B/.cd,
-  keyA/.initial={B keyA},
-  keyC/.initial={B keyC},
+  keyA/.initial={keyA at /tikz/A/B},
+  keyC/.initial={keyC at /tikz/A/B},
   C/.cd,
-  keyX/.initial={C keyX} }
+  keyX/.initial={keyX at /tikz/A/B/C} }
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyA}{\VALkeyA}
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyB}{\VALkeyB}
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyC}{\VALkeyC}
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyX}{\VALkeyX}
- 
  I got for keyA: \textbf{\VALkeyA} \par
  I got for keyB: \textbf{\VALkeyB} \par
  I got for keyC: \textbf{\VALkeyC} \par
  I got for keyX: \textbf{\VALkeyX} \par
- 
 \end{codestore}
 
 \tsdemo[emph={pgfkeysearchvalueof}]{keyval.demo}
 
-\section{Expl3 Base Command}
-\begin{codedescribe}{\pgfkeysearch_multipath_keysearch:nnnTF}
+\section{Expl3 Base Commands}
+\begin{codedescribe}{\pgfkeysearch_multipath_keysearch:nnnTF,\pgfkeysearch_keysearch:nnnTF}
 \begin{codesyntax}%
 \tsmacro{\pgfkeysearch_multipath_keysearch:nnnTF}{path-list,key,macro,if-found,if-not}
+\tsmacro{\pgfkeysearch_keysearch:nnnTF}{single-path,key,macro,if-found,if-not}
 \end{codesyntax}
-That's the \tsobj[pkg]{Expl3} version of it (for package writers). In fact, the \tsobj{\pgfkeysearchvalueof} is just a wrapper to this one.
+These are the \tsobj[pkg]{Expl3} version of it (for package writers). In fact, the \tsobj{\pgfkeysearchvalueof} is just a wrapper to \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF}. The \tsobj{\pgfkeysearch_keysearch:nnnTF} is the single path version.
 \end{codedescribe}
-
-
 \end{document} 

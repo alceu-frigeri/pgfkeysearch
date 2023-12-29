@@ -40,4 +40,5 @@ The Current Maintainer of this work is Alceu Frigeri
 
 * Version 1.1
     - More typos.
-    - exposing a single Expl3 command.
+    - renamed some internal variables to better follow the expl3 recommendations. 
+    - exposing the Expl3 commands.

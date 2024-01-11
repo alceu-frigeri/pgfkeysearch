@@ -12,7 +12,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.5} {2023/12/29}
+%% This is version {1.2} {2024/01/11}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -32,7 +32,7 @@
 \tstitle{
   author={Alceu Frigeri\footnote{\tsverb{https://github.com/alceu-frigeri/pgfkeysearch}}},
   date={\tsdate},
-  title={A Search Extension for pgfkeys\break Version \PkgInfo{pgfkeysearch}{version}}
+  title={The pgfkeysearch Package\break A Search Extension for pgfkeys\break Version \PkgInfo{pgfkeysearch}{version}}
   }
   
 \begin{typesetabstract}
@@ -43,10 +43,12 @@ That's exactly the aim of this, by having a way to find a key in a given path (o
 
 
 \section{Searching for a key}
-\begin{codedescribe}{\pgfkeysearchvalueof,\pgfkeysearchvalueofTF}
+\begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueof,\pgfkeysearch,\pgfkeysearchvalueofTF,\pgfkeysearchTF}
 \begin{codesyntax}%
 \tsmacro{\pgfkeysearchvalueof}{path-list,key,macro}
+\tsmacro{\pgfkeysearch}{path-list,key,macro}
 \tsmacro{\pgfkeysearchvalueofTF}{path-list,key,macro,if-found,if-not}
+\tsmacro{\pgfkeysearchTF}{path-list,key,macro,if-found,if-not}
 \end{codesyntax}
 \tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one was found).
 
@@ -56,7 +58,10 @@ The branch version will also execute either \tsobj[marg,sep={or}]{if-found,if-no
   
 \end{codedescribe}
 \begin{tsremark}
-  Those commands aren't expandable, that's the reason to have them storing the key value in a macro and not just 'placing the value in the input stream'.
+  \tsobj{\pgfkeysearch,\pgfkeysearchvalueof} are aliases to each other. Same with \tsobj{\pgfkeysearchvalueofTF,\pgfkeysearchTF}.
+\end{tsremark}
+\begin{tsremark}
+  These commands aren't expandable, that's the reason to have them storing the key value in a macro and not just placing the found value in the input stream.
 \end{tsremark}
 
 \begin{codestore}[keyval.demo]
@@ -86,6 +91,6 @@ The branch version will also execute either \tsobj[marg,sep={or}]{if-found,if-no
 \tsmacro{\pgfkeysearch_multipath_keysearch:nnnTF}{path-list,key,macro,if-found,if-not}
 \tsmacro{\pgfkeysearch_keysearch:nnnTF}{single-path,key,macro,if-found,if-not}
 \end{codesyntax}
-These are the \tsobj[pkg]{Expl3} version of it (for package writers). In fact, the \tsobj{\pgfkeysearchvalueof} is just a wrapper to \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF}. The \tsobj{\pgfkeysearch_keysearch:nnnTF} is the single path version.
+These are the \tsobj[pkg]{Expl3} version of it, for package writers. In fact, \tsobj{\pgfkeysearchvalueof,\pgfkeysearch,\pgfkeysearchvalueofTF,\pgfkeysearchTF} are just wrappers to \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF}. The \tsobj{\pgfkeysearch_keysearch:nnnTF} is the single path version and it's slightly faster than the more generic multi-path version (for a single path search, of course), given that \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF} calls \tsobj{\pgfkeysearch_keysearch:nnnTF} for each path in \tsobj[marg]{path-list}.
 \end{codedescribe}
 \end{document} 

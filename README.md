@@ -52,7 +52,11 @@ The Current Maintainer of this work is Alceu Frigeri
 
 ## Changelog
 
-* Version 1.1 (this)
+* Version 1.2 (this)
+    - More typos.
+    - added two command aliases, see documentation.
+
+* Version 1.1
     - More typos.
     - renamed some internal variables to better follow the expl3 recommendations. 
     - exposing the Expl3 commands.

@@ -1,0 +1,238 @@
+%%%==============================================================================
+%% Copyright 2023-present by Alceu Frigeri
+%%
+%% This work may be distributed and/or modified under the conditions of
+%%
+%% * The [LaTeX Project Public License](http://www.latex-project.org/lppl.txt),
+%%   version 1.3c (or later), and/or
+%% * The [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.html),
+%%   version 3 (or later)
+%%
+%% This work has the LPPL maintenance status *maintained*.
+%%
+%% The Current Maintainer of this work is Alceu Frigeri
+%%
+%% This is version {1.0} {2023/12/27}
+%%
+%% The list of files that compose this work can be found in the README.md file at
+%% https://ctan.org/pkg/pgfkeysearch
+%%
+%%%==============================================================================
+\NeedsTeXFormat{LaTeX2e}[2022/06/01]
+
+
+\ProvidesExplPackage
+    {pgfkeysearch}
+    {2023/12/27}
+    {1.0}
+    {pgfkeys Search Extension}
+
+\ExplSyntaxOn
+%%%%%%%
+%%%
+%%% Just an attempt of having my packages info in a regular way
+%%% Idea being: { <pck-name> / pkg info } for each and all.
+%%%
+%%%%%%%
+\keys_define:nn { pgfkeysearch / pkg info}
+  {
+     name        .code:n = {pgfkeysearch} ,
+     prefix      .code:n = {pgfkeysearch} ,
+     date        .code:n = {2023/12/27},
+     version     .code:n = {1.0} ,
+     description .code:n = {pgfkeys Search Extension}
+  }
+\cs_if_exist:NF \__codedesc_pkg_info:nn 
+  {
+    \cs_new_protected:Npn \__codedesc_pkg_info:nn #1#2
+      { \keys_set:nn {#1 / pkg info}{#2} }
+  }
+\cs_if_exist:NF \PkgInfo
+  { \NewDocumentCommand \PkgInfo {mm} { \keys_set:nn {#1 / pkg info}{#2} } }
+\cs_if_exist:NF \PkgDescription
+  { 
+    \NewDocumentCommand \PkgDescription {m} 
+      { 
+        \noindent Package~ \textbf{\PkgInfo{#1}{name}}~Version:~\PkgInfo{#1}{version}~ -~ \PkgInfo{#1}{date}\par \emph{\PkgInfo{#1}{description}}~\par 
+      } 
+  }  
+%%%%%%%
+%%% End of cut-n-paste
+%%%%%%%
+
+
+%%%%%%%%%%%%%%%
+%%%
+%%% Expl3 machinery. _keysearch_ allows to find a key, 
+%%% if it's defined from 'anywhere' in the tree. I mean, upwards until, likely, /tikz/<key>
+%%% if it isn't defined, returns nothing (no error triggered)
+%%%
+%%%%%%%%%%%%%%%
+\seq_new:N \l__ctikzext_pathterms_seq
+\seq_new:N \l__ctikzext_pathtree_seq
+\tl_new:N \l__ctikzext_key_tl
+\tl_new:N \l__ctikzext_path_tl
+
+
+%%%%%%%%%%%%%%%%
+%%%%
+%%%% This works BUT, it isn't expandable and not a 1-to-1 replacement for pgfkeysvalueof (which is fully expandable)
+%%%% don't use this unless you know what you are doing. To avoid trouble tickets headaches, it's commeted out
+%%%%
+%%%%%%%%%%%%%%%%
+%\cs_new_protected:Npn \__ctikzext_keysearch:n #1
+%  {
+%    \seq_set_split:Nne \l__ctikzext_pathterms_seq {/} {#1}
+%    \seq_pop_right:NN \l__ctikzext_pathterms_seq \l__ctikzext_key_tl
+%    \seq_remove_all:Nn \l__ctikzext_pathterms_seq {}
+%    \tl_clear:N \l__ctikzext_path_tl
+%    \seq_clear:N \l__ctikzext_pathtree_seq
+%    \seq_map_inline:Nn \l__ctikzext_pathterms_seq
+%      {
+%        \tl_put_right:Ne \l__ctikzext_path_tl {/##1}
+%        \seq_put_right:Ne \l__ctikzext_pathtree_seq {\l__ctikzext_path_tl}
+%      }
+%    \seq_reverse:N \l__ctikzext_pathtree_seq
+%    \seq_map_inline:Nn \l__ctikzext_pathtree_seq
+%      {
+%        \cs_if_exist:cT {pgfk@##1/\l__ctikzext_key_tl}
+%          {
+%            \exp_args:Ne \use:c {pgfk@##1/\l__ctikzext_key_tl}
+%            \seq_map_break:
+%          }
+%      }
+%  }
+  
+  
+  
+%%%%%%%%%%%%%%%
+%%%
+%%% Deplecated... single path key search (just a bit faster if a single path)
+%%%
+%%%%%%%%%%%%%%%
+%\prg_new_protected_conditional:Npnn \__ctikzext_keysearch:nn #1#2 {TF,T,F}
+%  {
+%    \seq_set_split:Nne \l__ctikzext_pathterms_seq {/} {#1}
+%    \seq_pop_right:NN \l__ctikzext_pathterms_seq \l__ctikzext_key_tl
+%    \seq_remove_all:Nn \l__ctikzext_pathterms_seq {}
+%    \tl_clear:N \l__ctikzext_path_tl
+%    \seq_clear:N \l__ctikzext_pathtree_seq
+%    \seq_map_inline:Nn \l__ctikzext_pathterms_seq
+%      {
+%        \tl_put_right:Ne \l__ctikzext_path_tl {/##1}
+%        \seq_put_right:Ne \l__ctikzext_pathtree_seq {\l__ctikzext_path_tl}
+%      }
+%    \seq_reverse:N \l__ctikzext_pathtree_seq
+%    \bool_set_false:N \l__ctikzext_valuefound_bool
+%    \seq_map_inline:Nn \l__ctikzext_pathtree_seq
+%      {
+%        \cs_if_exist:cT {pgfk@##1/\l__ctikzext_key_tl}
+%          {
+%            \tl_set:Ne #2 {\exp_not:N \use:c{pgfk@##1/\l__ctikzext_key_tl}}
+%            \bool_set_true:N \l__ctikzext_valuefound_bool
+%            \seq_map_break:
+%          }
+%      }
+%    \bool_if:nTF {\l__ctikzext_valuefound_bool}
+%      { \prg_return_true: }
+%      { \prg_return_false: }
+%  }
+
+
+
+%%%%%%%%%%%%%%%
+%%%
+%%% Given a path /A/B/C/D it will look after
+%%%  /A/B/C/D/<key> 
+%%%  /A/B/C/<key>
+%%%  /A/B/<key>
+%%%  /A/<key>
+%%%    stoping at the first hit
+%%%
+%%%%%%%%%%%%%%%
+
+\bool_new:N \l__ctikzext_valuefound_bool
+\prg_new_protected_conditional:Npnn \__ctikzext_keysearch:nnn #1#2#3 {TF,T,F}
+  {
+    \seq_set_split:Nne \l__ctikzext_pathterms_seq {/} {#1}
+    \seq_remove_all:Nn \l__ctikzext_pathterms_seq {}
+    \tl_clear:N \l__ctikzext_path_tl
+    \seq_clear:N \l__ctikzext_pathtree_seq
+    \seq_map_inline:Nn \l__ctikzext_pathterms_seq
+      {
+        \tl_put_right:Ne \l__ctikzext_path_tl {/##1}
+        \seq_put_right:Ne \l__ctikzext_pathtree_seq {\l__ctikzext_path_tl}
+      }
+    \seq_reverse:N \l__ctikzext_pathtree_seq
+    \bool_set_false:N \l__ctikzext_valuefound_bool
+    \seq_map_inline:Nn \l__ctikzext_pathtree_seq
+      {
+        \cs_if_exist:cT {pgfk@##1/#2}
+          {
+            \tl_set:Ne #3 {\exp_not:N \use:c{pgfk@##1/#2}}
+            \bool_set_true:N \l__ctikzext_valuefound_bool
+            \seq_map_break:
+          }
+      }
+    \bool_if:nTF {\l__ctikzext_valuefound_bool}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+
+
+
+%%%%%%%%%%%%%%%
+%%%
+%%% #1 shall be a comma separated list of paths (can be a single one)
+%%% it searchs for the key in every path, stoping at the first hit.
+%%%
+%%%%%%%%%%%%%%%
+
+\bool_new:N \l__ctikzext_multisearch_bool
+\prg_new_protected_conditional:Npnn \__ctikzext_multipath_keysearch:nnn #1#2#3 {T,F,TF}
+  {
+    \bool_set_false:N \l__ctikzext_multisearch_bool
+    \clist_map_inline:nn {#1}
+      {
+        \__ctikzext_keysearch:nnnT {##1}{#2}{#3}
+          { 
+            \bool_set_true:N \l__ctikzext_multisearch_bool
+            \clist_map_break: 
+          }
+      }
+    \bool_if:nTF {\l__ctikzext_multisearch_bool}
+      { \prg_return_true: }
+      { \prg_return_false: }      
+  }
+
+\cs_generate_variant:Nn \tl_set:Nn {Ne}
+
+%%%%%%%%%%%%%%%
+%%%
+%%% The caveats: this ins't expandable.
+%%%
+%%%%%%%%%%%%%%%
+%%%
+%%% This is the more generic one. 
+%%% #1 is the path (or list of paths)
+%%% #2 is the <key>
+%%% #3 is the macro that will receive the key value (if any)
+%%%
+%%%%%%%%%%%%%%%
+
+\NewDocumentCommand{\pgfkeysearchvalueof}{mmm}
+  {
+    \__ctikzext_multipath_keysearch:nnnF {#1}{#2}{#3}
+      { \tl_set:Nn #3 {} }
+  }
+
+\NewDocumentCommand{\pgfkeysearchvalueofTF}{mmmmm}
+  {
+    \__ctikzext_multipath_keysearch:nnnTF {#1}{#2}{#3}
+      { #4 }
+      { 
+        \tl_set:Nn #3 {} 
+        #5
+      }
+  }

@@ -20,7 +20,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.2} {2024/01/11}
+%% This is version {1.3} {2025/05/26}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -45,60 +45,138 @@
   
 \begin{typesetabstract}
 
-The command \tsobj{\pgfkeysvalueof}, unlike other \tsobj{\pgfkeys} commands, doesn't have a \tsobj[keys]{.unknown} handler, or offers the option to search for a key.
-That's exactly the aim of this, by having a way to find a key in a given path (or collection of paths).
+The command \tsobj{\pgfkeysvalueof}, unlike the \tsobj{\pgfkeys} command, doesn't use the \tsobj[keys]{.unknown} handler, and raises an error if the key isn't defined in a given path. Therefore, it doesn't offers the option to search for a key in other paths.
+
+That's exactly the aim of this, to recursively search for the key in a collection (clist) of paths.
 \end{typesetabstract}
 
+\tableofcontents
 
 \section{Searching for a key}
-\begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueof,\pgfkeysearch,\pgfkeysearchvalueofTF,\pgfkeysearchTF}
+\begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueof,\pgfkeysearch}
 \begin{codesyntax}%
 \tsmacro{\pgfkeysearchvalueof}{path-list,key,macro}
 \tsmacro{\pgfkeysearch}{path-list,key,macro}
+\end{codesyntax}
+\tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one is found).
+
+For instance, given a path /A/B/C/D it will look first at /A/B/C/D/\tsobj[marg]{key}, them /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key},
+stopping at the first hit, returning the value found in \tsobj[marg]{macro}.
+  
+\end{codedescribe}
+\begin{tsremark}
+  \tsobj{\pgfkeysearch,\pgfkeysearchvalueof} are aliases to each other.
+\end{tsremark}
+\begin{tsremark}
+  These commands aren't expandable, that's the reason to store the key value in a macro and not just place the found value in the input stream.
+\end{tsremark}
+\begin{tsremark}
+  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
+\end{tsremark}
+
+\begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueofTF,\pgfkeysearchTF}
+\begin{codesyntax}%
 \tsmacro{\pgfkeysearchvalueofTF}{path-list,key,macro,if-found,if-not}
 \tsmacro{\pgfkeysearchTF}{path-list,key,macro,if-found,if-not}
 \end{codesyntax}
 \tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one was found).
 
-For instance, given a path /A/B/C/D it will look first at /A/B/C/D/\tsobj[marg]{key}, them /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key},
-stopping at the first hit, returning the value found in the \tsobj[marg]{macro}.
-The branch version will also execute either \tsobj[marg,sep={or}]{if-found,if-not}.
+These branch versions will also execute either \tsobj[marg,sep={or}]{if-found,if-not}.
   
 \end{codedescribe}
 \begin{tsremark}
-  \tsobj{\pgfkeysearch,\pgfkeysearchvalueof} are aliases to each other. Same with \tsobj{\pgfkeysearchvalueofTF,\pgfkeysearchTF}.
+\tsobj{\pgfkeysearchvalueofTF,\pgfkeysearchTF}  are aliases to each other.
 \end{tsremark}
 \begin{tsremark}
-  These commands aren't expandable, that's the reason to have them storing the key value in a macro and not just placing the found value in the input stream.
+  These commands aren't expandable, that's the reason to store the key value in a macro and not just place the found value in the input stream.
+\end{tsremark}
+\begin{tsremark}
+  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
 \end{tsremark}
 
+
 \begin{codestore}[keyval.demo]
- \pgfkeys{/tikz/A/.cd,
-  keyA/.initial={keyA at /tikz/A}, 
-  keyB/.initial={keyB at /tikz/A},
-  B/.cd,
-  keyA/.initial={keyA at /tikz/A/B},
-  keyC/.initial={keyC at /tikz/A/B},
-  C/.cd,
-  keyX/.initial={keyX at /tikz/A/B/C} }
+ \pgfkeys{%
+    /tikz/A/.cd,
+    keyA/.initial={keyA at /tikz/A}, 
+    keyB/.initial={keyB at /tikz/A},
+    %
+    B/.cd,
+    keyA/.initial={keyA at /tikz/A/B},
+    keyC/.initial={keyC at /tikz/A/B},
+    %
+    C/.cd,
+    keyX/.initial={keyX at /tikz/A/B/C} 
+  }
+\end{codestore}
+
+\begin{codestore}[keyval.demo]
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyA}{\VALkeyA}
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyB}{\VALkeyB}
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyC}{\VALkeyC}
  \pgfkeysearchvalueof{/tikz/A/B/C}{keyX}{\VALkeyX}
+\end{codestore}
+
+
+\begin{codestore}[keyval.demo]
  I got for keyA: \textbf{\VALkeyA} \par
  I got for keyB: \textbf{\VALkeyB} \par
  I got for keyC: \textbf{\VALkeyC} \par
  I got for keyX: \textbf{\VALkeyX} \par
 \end{codestore}
 
-\tsdemo[emph={pgfkeysearchvalueof}]{keyval.demo}
+\setnewcodekey{keydemo}{codeprefix={},resultprefix={},texcs2={pgfkeysearchvalueof,pgfkeysearch},keywd3={keyA,keyB,keyC,keyX},emph2={VALkeyA,VALkeyB,VALkeyC,VALkeyX}}
+
+\subsection{Example}
+Given the following pgfkeys:
+
+\tscode*[keydemo]{keyval.demo}[1]
+\tsexec{keyval.demo}[1]
+
+Key values can be retrieved as:
+
+\tscode*[keydemo]{keyval.demo}[2]
+\tsexec{keyval.demo}[2]
+
+and finally used as:
+\tsdemo[keydemo]{keyval.demo}[3]
 
 \section{Expl3 Base Commands}
-\begin{codedescribe}{\pgfkeysearch_multipath_keysearch:nnnTF,\pgfkeysearch_keysearch:nnnTF}
+\begin{codedescribe}[code,update=2025/05/26]{\pgfkeysearch_keysearch:nnNTF}
 \begin{codesyntax}%
-\tsmacro{\pgfkeysearch_multipath_keysearch:nnnTF}{path-list,key,macro,if-found,if-not}
-\tsmacro{\pgfkeysearch_keysearch:nnnTF}{single-path,key,macro,if-found,if-not}
+\tsmacro{\pgfkeysearch_keysearch:nnNTF}{single-path,key,macro,if-found,if-not}
 \end{codesyntax}
-These are the \tsobj[pkg]{Expl3} version of it, for package writers. In fact, \tsobj{\pgfkeysearchvalueof,\pgfkeysearch,\pgfkeysearchvalueofTF,\pgfkeysearchTF} are just wrappers to \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF}. The \tsobj{\pgfkeysearch_keysearch:nnnTF} is the single path version and it's slightly faster than the more generic multi-path version (for a single path search, of course), given that \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF} calls \tsobj{\pgfkeysearch_keysearch:nnnTF} for each path in \tsobj[marg]{path-list}.
+\tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value, if one is found.
+
+For instance, given a \tsobj[marg]{single-path} /A/B/C/D it will look first at /A/B/C/D/\tsobj[marg]{key}, them /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key},
+stopping at the first hit, returning the value found in \tsobj[marg]{macro}.
+
+This \tsobj{\pgfkeysearch_keysearch:nnNTF} is  slightly faster than the more generic multi-path version.
 \end{codedescribe}
+\begin{tsremark}
+  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
+\end{tsremark}
+\begin{tsremark}
+  The old signature \tsobj{\pgfkeysearch_keysearch:nnnTF} is deprecated, it still ``works'' but will raise a warning.
+\end{tsremark}
+
+
+\begin{codedescribe}[code,update=2025/05/26]{\pgfkeysearch_multipath_keysearch:nnNTF}
+\begin{codesyntax}%
+\tsmacro{\pgfkeysearch_multipath_keysearch:nnNTF}{path-list,key,macro,if-found,if-not}
+\end{codesyntax}
+Given a comma separated \tsobj[marg]{path-list}, this will call  \tsobj{\pgfkeysearch_keysearch:nnNTF} for each path in \tsobj[marg]{path-list}.
+\end{codedescribe}
+\begin{tsremark}
+  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
+\end{tsremark}
+\begin{tsremark}
+  \tsobj{\pgfkeysearchvalueof,\pgfkeysearch,\pgfkeysearchvalueofTF,\pgfkeysearchTF} are just wrappers to \tsobj{\pgfkeysearch_multipath_keysearch:nnNTF}.
+\end{tsremark}
+\begin{tsremark}
+  The old signature \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF} is deprecated, it still ``works'' but will raise a warning.
+\end{tsremark}
+
+
+
 \end{document} 

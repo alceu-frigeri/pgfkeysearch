@@ -52,7 +52,11 @@ The Current Maintainer of this work is Alceu Frigeri
 
 ## Changelog
 
-* Version 1.2 (this)
+* Version 1.3 (this)
+    - Fixing command's signature (expl, [#1](https://github.com/alceu-frigeri/pgfkeysearch/issues/1))
+    - Improving documentation.
+
+* Version 1.2
     - More typos.
     - added two command aliases, see documentation.
 

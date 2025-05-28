@@ -12,7 +12,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.3} {2025/05/26}
+%% This is version {1.4} {2025/05/28}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -23,8 +23,8 @@
 
 \ProvidesExplPackage
     {pgfkeysearch}
-    {2025/05/26}
-    {1.3}
+    {2025/05/28}
+    {1.4}
     {pgfkeys Search Extension}
 
 \ExplSyntaxOn
@@ -38,8 +38,8 @@
   {
      name        .code:n = {pgfkeysearch} ,
      prefix      .code:n = {pgfkeysearch} ,
-     date        .code:n = {2025/05/26},
-     version     .code:n = {1.3} ,
+     date        .code:n = {2025/05/28},
+     version     .code:n = {1.4} ,
      description .code:n = {pgfkeys~ search~ extension}
   }
 \cs_if_exist:NF \PkgInfo 
@@ -63,7 +63,18 @@
     ~Error~Code~ ID:<#1>.
   }
 
+\keys_define:nn { pgfkeysearch }
+{
+  root~ search .usage:n = general,
+	root~ search .bool_set:N = \l__pgfkeysearch_root_bool,
+  root~ search .initial:n = {false},
+}
+\ProcessKeyOptions [pgfkeysearch] 
 
+\cs_new_protected:Npn \pgfkeysearch_settings:n #1
+  {
+    \keys_set:nn {pgfkeysearch}{#1}
+  } 
 
 %%%%%%%%%%%%%%%
 %%%
@@ -87,6 +98,7 @@
 %%%  /A/B/C/<key>
 %%%  /A/B/<key>
 %%%  /A/<key>
+%%%  /<key> (if "root search" set)
 %%%    stoping at the first hit
 %%%
 %%%%%%%%%%%%%%%
@@ -96,12 +108,15 @@
     \seq_remove_all:Nn \l__pgfkeysearch_pathterms_seq {}
     \tl_clear:N \l__pgfkeysearch_path_tl
     \seq_clear:N \l__pgfkeysearch_pathtree_seq
+    \bool_if:NT \l__pgfkeysearch_root_bool
+      { \seq_put_right:Ne \l__pgfkeysearch_pathtree_seq {} }
     \seq_map_inline:Nn \l__pgfkeysearch_pathterms_seq
       {
         \tl_put_right:Ne \l__pgfkeysearch_path_tl {/##1}
         \seq_put_right:Ne \l__pgfkeysearch_pathtree_seq {\l__pgfkeysearch_path_tl}
       }
     \seq_reverse:N \l__pgfkeysearch_pathtree_seq
+    %\seq_show:N \l__pgfkeysearch_pathtree_seq
     \bool_set_false:N \l__pgfkeysearch_keyfound_bool
     \seq_map_inline:Nn \l__pgfkeysearch_pathtree_seq
       {
@@ -112,7 +127,7 @@
             \seq_map_break:
           }
       }
-    \bool_if:nTF {\l__pgfkeysearch_keyfound_bool}
+    \bool_if:NTF \l__pgfkeysearch_keyfound_bool
       { \prg_return_true: }
       { \prg_return_false: }
   }
@@ -128,7 +143,7 @@
 %%%%%%%%%%%%%%%
 %%%
 %%% #1 shall be a comma separated list of paths (can be a single one)
-%%% it searchs for key in every path, stoping at the first hit.
+%%% it searchs for a key in every path, stoping at the first hit.
 %%%
 %%%%%%%%%%%%%%%
 \prg_new_protected_conditional:Npnn \pgfkeysearch_multipath_keysearch:nnN #1#2#3 {T,F,TF}
@@ -142,7 +157,7 @@
             \clist_map_break: 
           }
       }
-    \bool_if:nTF {\l__pgfkeysearch_multipath_keyfound_bool}
+    \bool_if:NTF \l__pgfkeysearch_multipath_keyfound_bool
       { \prg_return_true: }
       { \prg_return_false: }      
   }
@@ -169,6 +184,9 @@
 %%% #3 is the macro that will receive the key value (if any)
 %%%
 %%%%%%%%%%%%%%%
+
+\NewDocumentCommand{\pgfkeysearchsettings}{m}
+  { \pgfkeysearch_settings:n {#1} }
 
 \NewDocumentCommand{\pgfkeysearchvalueof}{mmm}
   {

@@ -52,7 +52,11 @@ The Current Maintainer of this work is Alceu Frigeri
 
 ## Changelog
 
-* Version 1.3 (this)
+* Version 1.4 (this)
+    - adding a package option: root search [#2](https://github.com/alceu-frigeri/pgfkeysearch/issues/2
+    - and associated settings commands (see documentation).
+
+* Version 1.3
     - Fixing command's signature (expl, [#1](https://github.com/alceu-frigeri/pgfkeysearch/issues/1))
     - Improving documentation.
 

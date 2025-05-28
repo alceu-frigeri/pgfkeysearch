@@ -20,7 +20,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.3} {2025/05/26}
+%% This is version {1.4} {2025/05/28}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -29,7 +29,7 @@
 \documentclass[10pt]{article}
 \RequirePackage[verbose,a4paper,marginparwidth=27.5mm,top=2.5cm,bottom=1.5cm,hmargin={40mm,20mm},marginparsep=2.5mm,columnsep=10mm,asymmetric]{geometry}
 \usepackage{codedescribe}
-\usepackage{pgfkeysearch}
+\usepackage[root search]{pgfkeysearch}
 \RequirePackage[inline]{enumitem}
 \SetEnumitemKey{miditemsep}{parsep=0ex,itemsep=0.4ex}
 
@@ -45,23 +45,44 @@
   
 \begin{typesetabstract}
 
-The command \tsobj{\pgfkeysvalueof}, unlike the \tsobj{\pgfkeys} command, doesn't use the \tsobj[keys]{.unknown} handler, and raises an error if the key isn't defined in a given path. Therefore, it doesn't offers the option to search for a key in other paths.
+The command \tsobj{\pgfkeysvalueof}, unlike \tsobj{\pgfkeys} command, doesn't use the \tsobj[keys]{.unknown} handler, and it raises an error if the key isn't defined in the given path. It doesn't offers the option to search for a key in other paths.
 
-That's exactly the aim of this, to recursively search for the key in a collection (clist) of paths.
+The following commands will recursively search for the key in a collection of paths.
 \end{typesetabstract}
 
 \tableofcontents
 
-\section{Searching for a key}
+\section{Package Options}\label{Pack-Options}
+The default search behaviour assumes that all keys defined by a package or document are under a uniquely defined path, meaning, no root keys. For instance, given the path /A/B/C/D, the following commands will look, first, at /A/B/C/D/\tsobj[marg]{key}, then /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key}, stopping at the first hit. This can be changed with the following package option:
+
+\begin{describelist*}{keys}
+  \describe{root search}{If set, the \emph{path root} will also be included in the search, meaning it will look if /\tsobj[marg]{key}, as last resort, is defined.}
+\end{describelist*}
+\begin{tsremark}
+  If set, the root key (/\tsobj[marg]{key}) will be look at for every path in the path list. For instance \tsobj[verb]{\pgfkeysearch{/A/B/C,/X/Y,/Z/T}{key}}, /\tsobj[marg]{key} will be tried up to three times.
+\end{tsremark}
+
+
+\begin{codedescribe}[code,new=2025/05/27]{\pgfkeysearchsettings}
+\begin{codesyntax}%
+\tsmacro{\pgfkeysearchsettings}{options}
+\end{codesyntax}
+To change the search behaviour, middle document, including or not the path root. \tsobj[marg]{options} are any valid package option (for now just \tsobj[key]{root search}).
+\end{codedescribe}
+
+
+
+\section{User Document Commands}\label{Doc-level}
+Those commands are meant to be used at Document level. For packages, one is advised to use the ones defined at \ref{expl-ones}.
+
 \begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueof,\pgfkeysearch}
 \begin{codesyntax}%
 \tsmacro{\pgfkeysearchvalueof}{path-list,key,macro}
 \tsmacro{\pgfkeysearch}{path-list,key,macro}
 \end{codesyntax}
-\tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one is found).
+\tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key, and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one is found).
 
-For instance, given a path /A/B/C/D it will look first at /A/B/C/D/\tsobj[marg]{key}, them /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key},
-stopping at the first hit, returning the value found in \tsobj[marg]{macro}.
+\tsobj[marg]{key} will be searched for in the many paths from \tsobj[marg]{path-list} as described in \ref{Pack-Options}. \tsobj[marg]{macro} will be set with the found (if any) value.
   
 \end{codedescribe}
 \begin{tsremark}
@@ -71,7 +92,7 @@ stopping at the first hit, returning the value found in \tsobj[marg]{macro}.
   These commands aren't expandable, that's the reason to store the key value in a macro and not just place the found value in the input stream.
 \end{tsremark}
 \begin{tsremark}
-  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
+  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} will be empty, no warning or error will be raised.
 \end{tsremark}
 
 \begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueofTF,\pgfkeysearchTF}
@@ -91,7 +112,7 @@ These branch versions will also execute either \tsobj[marg,sep={or}]{if-found,if
   These commands aren't expandable, that's the reason to store the key value in a macro and not just place the found value in the input stream.
 \end{tsremark}
 \begin{tsremark}
-  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
+  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} will be empty, no warning or error will be raised.
 \end{tsremark}
 
 
@@ -111,10 +132,10 @@ These branch versions will also execute either \tsobj[marg,sep={or}]{if-found,if
 \end{codestore}
 
 \begin{codestore}[keyval.demo]
- \pgfkeysearchvalueof{/tikz/A/B/C}{keyA}{\VALkeyA}
- \pgfkeysearchvalueof{/tikz/A/B/C}{keyB}{\VALkeyB}
- \pgfkeysearchvalueof{/tikz/A/B/C}{keyC}{\VALkeyC}
- \pgfkeysearchvalueof{/tikz/A/B/C}{keyX}{\VALkeyX}
+ \pgfkeysearch{/tikz/A/B/C}{keyA}{\VALkeyA}
+ \pgfkeysearch{/tikz/A/B/C}{keyB}{\VALkeyB}
+ \pgfkeysearch{/tikz/A/B/C}{keyC}{\VALkeyC}
+ \pgfkeysearch{/tikz/A/B/C}{keyX}{\VALkeyX}
 \end{codestore}
 
 
@@ -141,40 +162,51 @@ Key values can be retrieved as:
 and finally used as:
 \tsdemo[keydemo]{keyval.demo}[3]
 
-\section{Expl3 Base Commands}
+\section{Expl3 Commands}\label{expl-ones}
+
+
+
+\begin{codedescribe}[code,new=2025/05/27]{\pgfkeysearch_settings:n}
+\begin{codesyntax}%
+\tsmacro{\pgfkeysearch_settings:n}{options}
+\end{codesyntax}
+To change the search behaviour, middle document, including or not the path root. \tsobj[marg]{options} are any valid package option (for now just \tsobj[key]{root search}, see \ref{Pack-Options}, notice the space\ldots).
+\end{codedescribe}
+
+
 \begin{codedescribe}[code,update=2025/05/26]{\pgfkeysearch_keysearch:nnNTF}
 \begin{codesyntax}%
-\tsmacro{\pgfkeysearch_keysearch:nnNTF}{single-path,key,macro,if-found,if-not}
+\tsmacro{\pgfkeysearch_keysearch:nnNTF}{single-path,key,tl-var,if-found,if-not}
 \end{codesyntax}
-\tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value, if one is found.
+\tsobj[marg]{key} is the desired key, and \tsobj[marg]{tl-var} is a token list variable that will receive the key value, if one is found.
+\tsobj[marg]{key} will be searched for in \tsobj[marg]{single-path} as described in \ref{Pack-Options}. 
 
-For instance, given a \tsobj[marg]{single-path} /A/B/C/D it will look first at /A/B/C/D/\tsobj[marg]{key}, them /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key},
-stopping at the first hit, returning the value found in \tsobj[marg]{macro}.
-
-This \tsobj{\pgfkeysearch_keysearch:nnNTF} is  slightly faster than the more generic multi-path version.
+\tsobj{\pgfkeysearch_keysearch:nnNTF} is  slightly faster than the more generic multi-path version.
 \end{codedescribe}
+
 \begin{tsremark}
-  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
+  If \tsobj[marg]{key} isn't found, no assignment will be made (to \tsobj[marg]{tl-var}), unlike the user's document one (defined at \ref{Doc-level}). No warning or error will be raised.
 \end{tsremark}
 \begin{tsremark}
-  The old signature \tsobj{\pgfkeysearch_keysearch:nnnTF} is deprecated, it still ``works'' but will raise a warning.
+  The old signature \tsobj{\pgfkeysearch_keysearch:nnnTF} is deprecated, and will raise a warning if used.
 \end{tsremark}
 
 
 \begin{codedescribe}[code,update=2025/05/26]{\pgfkeysearch_multipath_keysearch:nnNTF}
 \begin{codesyntax}%
-\tsmacro{\pgfkeysearch_multipath_keysearch:nnNTF}{path-list,key,macro,if-found,if-not}
+\tsmacro{\pgfkeysearch_multipath_keysearch:nnNTF}{path-list,key,tl-var,if-found,if-not}
 \end{codesyntax}
-Given a comma separated \tsobj[marg]{path-list}, this will call  \tsobj{\pgfkeysearch_keysearch:nnNTF} for each path in \tsobj[marg]{path-list}.
+Given a comma separated \tsobj[marg]{path-list}, this will call  \tsobj{\pgfkeysearch_keysearch:nnNTF} for each path in \tsobj[marg]{path-list}, until \tsobj[marg]{key} is found.
 \end{codedescribe}
+
 \begin{tsremark}
-  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} won't be assigned any value.
+  If \tsobj[marg]{key} isn't found, no assignment will be made (to \tsobj[marg]{tl-var}), unlike the user's document one (defined at \ref{Doc-level}). No warning or error will be raised.
 \end{tsremark}
 \begin{tsremark}
-  \tsobj{\pgfkeysearchvalueof,\pgfkeysearch,\pgfkeysearchvalueofTF,\pgfkeysearchTF} are just wrappers to \tsobj{\pgfkeysearch_multipath_keysearch:nnNTF}.
+  \tsobj[code]{\pgfkeysearchvalueof,\pgfkeysearch,\pgfkeysearchvalueofTF,\pgfkeysearchTF} are just wrappers to \tsobj{\pgfkeysearch_multipath_keysearch:nnNTF}.
 \end{tsremark}
 \begin{tsremark}
-  The old signature \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF} is deprecated, it still ``works'' but will raise a warning.
+  The old signature \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF} is deprecated, and will raise a warning if used.
 \end{tsremark}
 
 

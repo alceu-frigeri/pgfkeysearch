@@ -12,7 +12,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.4} {2025/05/28}
+%% This is version {1.4a} {2025/10/29}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -23,31 +23,26 @@
 
 \ProvidesExplPackage
     {pgfkeysearch}
-    {2025/05/28}
-    {1.4}
+    {2025/10/29}
+    {1.4a}
     {pgfkeys Search Extension}
 
 \ExplSyntaxOn
 %%%%%%%
 %%%
 %%% Just an attempt of having my packages info in a regular way
-%%% Idea being: { <pck-name> / pkg info } for each and all.
+%%% \Pkginfograb_set:nn {<pkg-name>} { props} for each and all.
 %%%
 %%%%%%%
-\keys_define:nn { pgfkeysearch / pkg info}
+\RequirePackage{pkginfograb}
+\pkginfograb_set:nn { pgfkeysearch }
   {
-     name        .code:n = {pgfkeysearch} ,
-     prefix      .code:n = {pgfkeysearch} ,
-     date        .code:n = {2025/05/28},
-     version     .code:n = {1.4} ,
-     description .code:n = {pgfkeys~ search~ extension}
+     name        = {pgfkeysearch} ,
+     prefix      = {pgfkeysearch} ,
+     date        = {2025/10/29},
+     version     = {1.4a} ,
+     description = {pgfkeys~ search~ extension}
   }
-\cs_if_exist:NF \PkgInfo 
-  {
-    \NewDocumentCommand \PkgInfo {mm} { \keys_set:nn {#1 / pkg info}{#2} } 
-    \NewDocumentCommand \PkgDescription {m} 
-      { \noindent Package~ \textbf{\PkgInfo{#1}{name}}~Version:~\PkgInfo{#1}{version}~ -~ \PkgInfo{#1}{date}\par \emph{\PkgInfo{#1}{description}}~\par } 
-  }  
 %%%%%%%
 %%% End of cut-n-paste
 %%%%%%%
@@ -85,9 +80,7 @@
 %%%%%%%%%%%%%%%
 \seq_new:N \l__pgfkeysearch_pathterms_seq
 \seq_new:N \l__pgfkeysearch_pathtree_seq
-\tl_new:N \l__pgfkeysearch_path_tl
-\bool_new:N \l__pgfkeysearch_keyfound_bool
-\bool_new:N \l__pgfkeysearch_multipath_keyfound_bool 
+\tl_new:N  \l__pgfkeysearch_path_tl
 
 \cs_generate_variant:Nn \tl_set:Nn {Ne}
 
@@ -108,37 +101,47 @@
     \seq_remove_all:Nn \l__pgfkeysearch_pathterms_seq {}
     \tl_clear:N \l__pgfkeysearch_path_tl
     \seq_clear:N \l__pgfkeysearch_pathtree_seq
-    \bool_if:NT \l__pgfkeysearch_root_bool
-      { \seq_put_right:Ne \l__pgfkeysearch_pathtree_seq {} }
+    \bool_if:NTF \l__pgfkeysearch_root_bool
+      { \seq_put_right:Nn \l__pgfkeysearch_pathtree_seq {} }
+      {}
     \seq_map_inline:Nn \l__pgfkeysearch_pathterms_seq
       {
-        \tl_put_right:Ne \l__pgfkeysearch_path_tl {/##1}
-        \seq_put_right:Ne \l__pgfkeysearch_pathtree_seq {\l__pgfkeysearch_path_tl}
+        \tl_put_right:Nn \l__pgfkeysearch_path_tl {/##1}
+        \seq_put_right:NV \l__pgfkeysearch_pathtree_seq \l__pgfkeysearch_path_tl
       }
     \seq_reverse:N \l__pgfkeysearch_pathtree_seq
-    %\seq_show:N \l__pgfkeysearch_pathtree_seq
-    \bool_set_false:N \l__pgfkeysearch_keyfound_bool
+
+    \cs_set_eq:NN \__pgfkeysearch_return: \prg_return_false:
+    
     \seq_map_inline:Nn \l__pgfkeysearch_pathtree_seq
       {
-        \cs_if_exist:cT {pgfk@##1/#2}
+        \cs_if_exist:cTF {pgfk@##1/#2}
           {
-            \tl_set:Ne #3 {\exp_not:N \use:c{pgfk@##1/#2}}
-            \bool_set_true:N \l__pgfkeysearch_keyfound_bool
+            \tl_set:Ne #3 {\exp_not:c{pgfk@##1/#2}}
+            \cs_set_eq:NN \__pgfkeysearch_return: \prg_return_true:
             \seq_map_break:
           }
+          {}
       }
-    \bool_if:NTF \l__pgfkeysearch_keyfound_bool
-      { \prg_return_true: }
-      { \prg_return_false: }
+    \__pgfkeysearch_return:
   }
 
-\prg_new_protected_conditional:Npnn \pgfkeysearch_keysearch:nnn #1#2#3 {TF,T,F}
+ 
+\cs_new_protected:Npn \pgfkeysearch_keysearch:nnnTF
   {
-    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {singlepath}{\cs_to_str:N \pgfkeysearch_keysearch:nnn}{\cs_to_str:N \pgfkeysearch_keysearch:nnN}
-    \pgfkeysearch_keysearch:nnNTF {#1}{#2} #3
-      { \prg_return_true: }
-      { \prg_return_false: }   
-  }  
+    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {singlepath}{\cs_to_str:N \pgfkeysearch_keysearch:nnnTF}{\cs_to_str:N \pgfkeysearch_keysearch:nnNTF}
+    \pgfkeysearch_keysearch:nnNTF
+  }
+\cs_new_protected:Npn \pgfkeysearch_keysearch:nnnT
+  {
+    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {singlepath}{\cs_to_str:N \pgfkeysearch_keysearch:nnnT}{\cs_to_str:N \pgfkeysearch_keysearch:nnNT}
+    \pgfkeysearch_keysearch:nnNT
+  }
+\cs_new_protected:Npn \pgfkeysearch_keysearch:nnnF
+  {
+    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {singlepath}{\cs_to_str:N \pgfkeysearch_keysearch:nnnF}{\cs_to_str:N \pgfkeysearch_keysearch:nnNF}
+    \pgfkeysearch_keysearch:nnNF
+  }
 
 %%%%%%%%%%%%%%%
 %%%
@@ -151,30 +154,33 @@
     \bool_set_false:N \l__pgfkeysearch_multipath_keyfound_bool
     \clist_map_inline:nn {#1}
       {
-        \pgfkeysearch_keysearch:nnNT {##1}{#2} #3
-          { 
-            \bool_set_true:N \l__pgfkeysearch_multipath_keyfound_bool
-            \clist_map_break: 
-          }
+        \pgfkeysearch_keysearch:nnNTF {##1}{#2} #3
+          { \clist_map_break: }
+          {}
       }
-    \bool_if:NTF \l__pgfkeysearch_multipath_keyfound_bool
-      { \prg_return_true: }
-      { \prg_return_false: }      
+    \__pgfkeysearch_return:
   }
-
-
-\prg_new_protected_conditional:Npnn \pgfkeysearch_multipath_keysearch:nnn #1#2#3 {T,F,TF}
+ 
+\cs_new_protected:Npn \pgfkeysearch_multipath_keysearch:nnnTF
   {
-    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {multipath}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnn}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnN}
-    \pgfkeysearch_multipath_keysearch:nnNTF {#1}{#2} #3
-      { \prg_return_true: }
-      { \prg_return_false: }   
+    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {multipath}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnnTF}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnNTF}
+    \pgfkeysearch_multipath_keysearch:nnNTF
+  }
+\cs_new_protected:Npn \pgfkeysearch_multipath_keysearch:nnnT
+  {
+    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {multipath}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnnT}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnNT}
+    \pgfkeysearch_multipath_keysearch:nnNT
+  }
+\cs_new_protected:Npn \pgfkeysearch_multipath_keysearch:nnnF
+  {
+    \msg_warning:nnnxx {pgfkeysearch} {deprecated} {multipath}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnnF}{\cs_to_str:N \pgfkeysearch_multipath_keysearch:nnNF}
+    \pgfkeysearch_multipath_keysearch:nnNF
   }
 
 
 %%%%%%%%%%%%%%%
 %%%
-%%% The caveats: this ins't expandable.
+%%% The caveats: this isn't expandable.
 %%%
 %%%%%%%%%%%%%%%
 %%%
@@ -190,7 +196,8 @@
 
 \NewDocumentCommand{\pgfkeysearchvalueof}{mmm}
   {
-    \pgfkeysearch_multipath_keysearch:nnNF {#1}{#2}#3
+    \pgfkeysearch_multipath_keysearch:nnNTF {#1}{#2}#3
+      { }
       { \tl_set:Nn #3 {} }
   }
 \let\pgfkeysearch\pgfkeysearchvalueof

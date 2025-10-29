@@ -51,8 +51,11 @@ The Current Maintainer of this work is Alceu Frigeri
 -------------
 
 ## Changelog
+* Version 1.4a (this)
+    - switching over pkginfograb package's info
+    - a bit of code clean up/optimization.
 
-* Version 1.4  (this)
+* Version 1.4
     - adding a package option: root search [#2](https://github.com/alceu-frigeri/pgfkeysearch/issues/2) 
     - and associated settings commands (see documentation).
 

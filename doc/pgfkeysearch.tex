@@ -20,7 +20,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.4a} {2025/10/29}
+%% This is version {1.5} {2025/11/06}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -37,6 +37,7 @@
 \SetEnumitemKey{miditemsep}{parsep=0ex,itemsep=0.4ex}
 
 \RequirePackage{pgfkeys}
+
 
 \RequirePackage[hidelinks,hypertexnames=false]{hyperref}
 \begin{document}
@@ -56,67 +57,86 @@ The following commands will recursively search for a key in a collection of path
 \tableofcontents
 
 \section{Package Options}\label{Pack-Options}
-The default search behaviour assumes that all keys defined by a package or document are under a uniquely defined path, meaning, no root keys. For instance, given the path /A/B/C/D, the following commands will look, first, at /A/B/C/D/\tsobj[marg]{key}, then /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key}, stopping at the first hit. This can be changed with the following package option:
+The default search behaviour assumes that all keys defined by a package or document are under a uniquely defined path, meaning, no root keys. For instance, given the path /A/B/C/D, the following commands will look, first, at /A/B/C/D/\tsobj[marg]{key}, then /A/B/C/\tsobj[marg]{key}, and so on, until /A/\tsobj[marg]{key}, stopping at the first hit. This can be changed with the \tsobj[option]{root search} package option.
 
+By default, the value stored in a \tsobj[pkg]{pgfkey} key will be recovered, but, with the option \tsobj[option]{key=macro} a macro will be returned, such that, later changes to the searched key (with \tsobj[pkg]{pgfkey}) will be reflected by the recovered macro, the recovered macro will, effectively, be an alias for it.
+
+Lastly, if a key isn't found, the returning macro will always be cleared up (\tsobj[option]{settings=new}), but, with \tsobj[option]{settings=old}, the \tsobj[pkg]{expl3} commands (see \ref{expl-ones}) won't clear up the returning macro (old/original behaviour of this package).
 \begin{describelist*}{keys}
-  \describe{root search}{If set, the \emph{path root} will also be included in the search, meaning it will look if /\tsobj[marg]{key}, as last resort, is defined.}
+  \describe{root search}{(default: false) If set, the \emph{path root} will also be included in the search, meaning it will look if /\tsobj[marg]{key}, as last resort, is defined.}
+  \describe{key}{(default: \tsobj[option]{value}. Possible values: \tsobj[option,sep=or]{value,macro}. As said, the default behaviour is to recover the value stored in a \tsobj[pkg]{pgfkey}. With \tsobj[option]{key=macro}, a macro ``pointing to'' the \tsobj[pkg]{pgfkey} will be recovered.}
+  \describe{settings}{(default: \tsobj[option]{new}). Possible values: \tsobj[option,sep=or]{old,new}. If set to \tsobj[option]{old}, this will revert to the original \tsobj[pkg]{expl3} behaviour, whereas if the key wasn't found, the returning variable won't be cleared up (no assignment taking place).}
 \end{describelist*}
 \begin{tsremark}
-  If set, the root key (/\tsobj[marg]{key}) will be look at for every path in the path list. For instance \tsobj[verb]{\pgfkeysearch{/A/B/C,/X/Y,/Z/T}{key}}, /\tsobj[marg]{key} will be tried up to three times.
+  With \tsobj[option]{root search} set, the root key (/\tsobj[marg]{key}) will be look at for every path in the path list. For instance \tsobj[verb]{\pgfkeysearch{/A/B/C,/X/Y,/Z/T}{key}}, /\tsobj[marg]{key} (at the root) will be tried up to three times.
 \end{tsremark}
-
-
-\begin{codedescribe}[code,new=2025/05/27]{\pgfkeysearchsettings}
-\begin{codesyntax}%
-\tsmacro{\pgfkeysearchsettings}{options}
-\end{codesyntax}
-To change the search behaviour, middle document, including or not the path root. \tsobj[marg]{options} are any valid package option (for now just \tsobj[key]{root search}).
-\end{codedescribe}
 
 
 
 \section{User Document Commands}\label{Doc-level}
 Those commands are meant to be used at Document level. For packages, one is advised to use the ones defined at \ref{expl-ones}.
 
-\begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueof,\pgfkeysearch}
+\begin{codedescribe}[code,new=2025/05/27]{\pgfkeysearchsettings}
 \begin{codesyntax}%
-\tsmacro{\pgfkeysearchvalueof}{path-list,key,macro}
+\tsmacro{\pgfkeysearchsettings}{options}
+\end{codesyntax}
+To change the search behaviour, middle document. \tsobj[marg]{options} can be any package option (see \ref{Pack-Options}).
+\end{codedescribe}
+
+
+
+\begin{codedescribe}[code,new=2025/11/03]{\pgfkeygetvalueof,\pgfkeyget,\pgfkeygetvalueofTF,\pgfkeygetTF}
+\begin{codesyntax}%
+\tsmacro{\pgfkeygetvalueof}{single-path,key,macro}
+\tsmacro{\pgfkeyget}{single-path,key,macro}
+\tsmacro{\pgfkeygetvalueofTF}{single-path,key,macro,if-found,if-not}
+\tsmacro{\pgfkeygetTF}{single-path,key,macro,if-found,if-not}
+\end{codesyntax}
+Those are ``non searching'' variants (faster than the searching variants), whereas \tsobj[marg]{single-path} is the single location/path  to be looked at. \tsobj[marg]{key} is the desired key, and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one is found). \tsobj[marg]{macro} will be set with the found (if any) value.
+  
+\end{codedescribe}
+\begin{tsremark}
+  If \tsobj[option]{key=value}, then the key value will be recovered. Otherwise, if \tsobj[option]{key=macro} then \tsobj[marg]{macro} will  ``point to'' (\tsobj[pkg]{pgfkey}) key.
+\end{tsremark}
+\begin{tsremark}
+  \tsobj{\pgfkeykeg,\pgfkeygetvalueof} are aliases to each other. Same for \tsobj{\pgfkeygetTF,\pgfkeygetvalueofTF}
+\end{tsremark}
+\begin{tsremark}
+  Those commands aren't expandable, though, once retrieved, the returning macro can be used in an expandable context.
+\end{tsremark}
+\begin{tsremark}
+  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} will be empty, no warning or error will be raised.
+\end{tsremark}
+
+
+
+\begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearch,\pgfkeysearchvalueof,\pgfkeysearchTF,\pgfkeysearchvalueofTF}
+\begin{codesyntax}%
 \tsmacro{\pgfkeysearch}{path-list,key,macro}
+\tsmacro{\pgfkeysearchvalueof}{path-list,key,macro}
+\tsmacro{\pgfkeysearchTF}{path-list,key,macro,if-found,if-not}
+\tsmacro{\pgfkeysearchvalueofTF}{path-list,key,macro,if-found,if-not}
 \end{codesyntax}
 \tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key, and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one is found).
 
 \tsobj[marg]{key} will be searched for in the many paths from \tsobj[marg]{path-list} as described in \ref{Pack-Options}. \tsobj[marg]{macro} will be set with the found (if any) value.
+The branch versions will also execute either \tsobj[marg,sep={or}]{if-found,if-not}.
   
 \end{codedescribe}
 \begin{tsremark}
-  \tsobj{\pgfkeysearch,\pgfkeysearchvalueof} are aliases to each other.
+  If \tsobj[option]{key=value}, then the key value will be recovered. Otherwise, if \tsobj[option]{key=macro} then \tsobj[marg]{macro} will  ``point to'' (\tsobj[pkg]{pgfkey}) key.
+\end{tsremark}
+
+\begin{tsremark}
+  \tsobj{\pgfkeysearch,\pgfkeysearchvalueof} are aliases to each other. Same with \tsobj{\pgfkeysearchvalueofTF,\pgfkeysearchTF}.
 \end{tsremark}
 \begin{tsremark}
-  These commands aren't expandable, though, once retrieved, the returning macro can be used in an expandable context.
+  Those commands aren't expandable, though, once retrieved, the returning macro can be used in an expandable context.
 \end{tsremark}
 \begin{tsremark}
   If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} will be empty, no warning or error will be raised.
 \end{tsremark}
 
-\begin{codedescribe}[code,update=2024/01/11]{\pgfkeysearchvalueofTF,\pgfkeysearchTF}
-\begin{codesyntax}%
-\tsmacro{\pgfkeysearchvalueofTF}{path-list,key,macro,if-found,if-not}
-\tsmacro{\pgfkeysearchTF}{path-list,key,macro,if-found,if-not}
-\end{codesyntax}
-\tsobj[marg]{path-list} is a comma separated list (clist) of paths (can be a single one). \tsobj[marg]{key} is the desired key and \tsobj[marg]{macro} is the macro/command that will receive (store) the key value (if one was found).
-
-These branch versions will also execute either \tsobj[marg,sep={or}]{if-found,if-not}.
-  
-\end{codedescribe}
-\begin{tsremark}
-\tsobj{\pgfkeysearchvalueofTF,\pgfkeysearchTF}  are aliases to each other.
-\end{tsremark}
-\begin{tsremark}
-  These commands aren't expandable, though, once retrieved, the returning macro can be used in an expandable context.
-\end{tsremark}
-\begin{tsremark}
-  If \tsobj[marg]{key} isn't found, \tsobj[marg]{macro} will be empty, no warning or error will be raised.
-\end{tsremark}
 
 
 \begin{codestore}[keyval.demo]
@@ -149,7 +169,10 @@ These branch versions will also execute either \tsobj[marg,sep={or}]{if-found,if
  I got for keyX: \textbf{\VALkeyX} \par
 \end{codestore}
 
+
+
 \setnewcodekey{keydemo}{codeprefix={},resultprefix={},texcs2={pgfkeysearchvalueof,pgfkeysearch},keywd3={keyA,keyB,keyC,keyX},emph2={VALkeyA,VALkeyB,VALkeyC,VALkeyX}}
+
 
 \subsection{Example}
 Given the following pgfkeys:
@@ -157,28 +180,54 @@ Given the following pgfkeys:
 \tscode*[keydemo]{keyval.demo}[1]
 \tsexec{keyval.demo}[1]
 
-Key values can be retrieved:
+\newpage
+Key values can be retrieved and used as:
 
-\tscode*[keydemo]{keyval.demo}[2]
 \tsexec{keyval.demo}[2]
+\tscode*[keydemo]{keyval.demo}[2]
 
-and used as:
+
 \tsdemo[keydemo]{keyval.demo}[3]
+
 
 \section{Expl3 Commands}\label{expl-ones}
 
 
+\begin{tsremark}[Deprecation:]
+  A warning will be raised if either \tsobj{\pgfkeysearch_keysearch:nnnTF} or \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF} are used.
+\end{tsremark}
 
 \begin{codedescribe}[code,new=2025/05/27]{\pgfkeysearch_settings:n}
 \begin{codesyntax}%
 \tsmacro{\pgfkeysearch_settings:n}{options}
 \end{codesyntax}
-To change the search behaviour, middle document, including or not the path root. \tsobj[marg]{options} are any valid package option (for now just \tsobj[key]{root search}, see \ref{Pack-Options}, notice the space\ldots).
+To change the search behaviour, middle document. \tsobj[marg]{options} can be any package option (see \ref{Pack-Options}).
+
 \end{codedescribe}
 
 
-\begin{codedescribe}[code,update=2025/05/26]{\pgfkeysearch_keysearch:nnNTF}
+\begin{codedescribe}[code,new=2025/11/03]{\pgfkeysearch_keyget:nnN,\pgfkeysearch_keyget:nnNTF}
 \begin{codesyntax}%
+\tsmacro{\pgfkeysearch_keyget:nnN}{single-path,key,tl-var}
+\tsmacro{\pgfkeysearch_keyget:nnNTF}{single-path,key,tl-var,if-found,if-not}
+\end{codesyntax}
+\tsobj[marg]{key} is the desired key, and \tsobj[marg]{tl-var} is a token list variable that will receive the key value, if one is found.
+\tsobj[marg]{key} will be looked at \tsobj[marg]{single-path} \textsl{only}.
+
+\tsobj{\pgfkeysearch_keyget:} is faster than the search variants.
+\end{codedescribe}
+
+\begin{tsremark}
+If \tsobj[marg]{key} isn't found \tsobj[marg]{tl-var}  will be cleared up (new default). But, with option \tsobj[option]{settings=old} \tsobj[marg]{tl-var} will preserve whatever value it had, no assignment will be made. In both cases, no warning or error will be raised.
+\end{tsremark}
+\begin{tsremark}
+  If \tsobj[option]{key=value}, then the key value will be recovered. Otherwise, if \tsobj[option]{key=macro} then \tsobj[marg]{macro} will  ``point to'' (\tsobj[pkg]{pgfkey}) key.
+\end{tsremark}
+
+
+\begin{codedescribe}[code,update=2025/05/26,update=2025/11/03]{\pgfkeysearch_keysearch:nnN,\pgfkeysearch_keysearch:nnNTF}
+\begin{codesyntax}%
+\tsmacro{\pgfkeysearch_keysearch:nnN}{single-path,key,tl-var}
 \tsmacro{\pgfkeysearch_keysearch:nnNTF}{single-path,key,tl-var,if-found,if-not}
 \end{codesyntax}
 \tsobj[marg]{key} is the desired key, and \tsobj[marg]{tl-var} is a token list variable that will receive the key value, if one is found.
@@ -188,30 +237,29 @@ To change the search behaviour, middle document, including or not the path root.
 \end{codedescribe}
 
 \begin{tsremark}
-  If \tsobj[marg]{key} isn't found, no assignment will be made to \tsobj[marg]{tl-var}) and no warning or error will be raised.
+If \tsobj[marg]{key} isn't found \tsobj[marg]{tl-var}  will be cleared up (new default). But, with option \tsobj[option]{settings=old} \tsobj[marg]{tl-var} will preserve whatever value it had, no assignment will be made. In both cases, no warning or error will be raised.
 \end{tsremark}
 \begin{tsremark}
-  The old signature \tsobj{\pgfkeysearch_keysearch:nnnTF} is deprecated, and will raise a warning if used.
+  If \tsobj[option]{key=value}, then the key value will be recovered. Otherwise, if \tsobj[option]{key=macro} then \tsobj[marg]{macro} will  ``point to'' (\tsobj[pkg]{pgfkey}) key.
 \end{tsremark}
 
 
-\begin{codedescribe}[code,update=2025/05/26]{\pgfkeysearch_multipath_keysearch:nnNTF}
+\begin{codedescribe}[code,update=2025/05/26,update=2025/11/03]{\pgfkeysearch_multipath_keysearch:nnN,\pgfkeysearch_multipath_keysearch:nnNTF}
 \begin{codesyntax}%
+\tsmacro{\pgfkeysearch_multipath_keysearch:nnN}{path-list,key,tl-var}
 \tsmacro{\pgfkeysearch_multipath_keysearch:nnNTF}{path-list,key,tl-var,if-found,if-not}
 \end{codesyntax}
 Given a comma separated \tsobj[marg]{path-list}, this will call  \tsobj{\pgfkeysearch_keysearch:nnNTF} for each path in \tsobj[marg]{path-list}, until \tsobj[marg]{key} is found.
 \end{codedescribe}
 
 \begin{tsremark}
-  If \tsobj[marg]{key} isn't found, no assignment will be made to \tsobj[marg]{tl-var}) and no warning or error will be raised.
+If \tsobj[marg]{key} isn't found \tsobj[marg]{tl-var}  will be cleared up (new default). But, with option \tsobj[option]{settings=old} \tsobj[marg]{tl-var} will preserve whatever value it had, no assignment will be made. In both cases, no warning or error will be raised.
 \end{tsremark}
 \begin{tsremark}
   The document level commands (in \ref{Doc-level}) are just wrappers to this command.
 \end{tsremark}
 \begin{tsremark}
-  The old signature \tsobj{\pgfkeysearch_multipath_keysearch:nnnTF} is deprecated, and will raise a warning if used.
+  If \tsobj[option]{key=value}, then the key value will be recovered. Otherwise, if \tsobj[option]{key=macro} then \tsobj[marg]{macro} will  ``point to'' (\tsobj[pkg]{pgfkey}) key.
 \end{tsremark}
-
-
 
 \end{document} 

@@ -12,7 +12,7 @@
 %%
 %% The Current Maintainer of this work is Alceu Frigeri
 %%
-%% This is version {1.4a} {2025/10/29}
+%% This is version {1.5} {2025/11/06}
 %%
 %% The list of files that compose this work can be found in the README.md file at
 %% https://ctan.org/pkg/pgfkeysearch
@@ -23,8 +23,8 @@
 
 \ProvidesExplPackage
     {pgfkeysearch}
-    {2025/10/29}
-    {1.4a}
+    {2025/11/06}
+    {1.5}
     {pgfkeys Search Extension}
 
 \ExplSyntaxOn
@@ -39,8 +39,8 @@
   {
      name        = {pgfkeysearch} ,
      prefix      = {pgfkeysearch} ,
-     date        = {2025/10/29},
-     version     = {1.4a} ,
+     date        = {2025/11/06},
+     version     = {1.5} ,
      description = {pgfkeys~ search~ extension}
   }
 %%%%%%%
@@ -58,23 +58,69 @@
     ~Error~Code~ ID:<#1>.
   }
 
-\keys_define:nn { pgfkeysearch }
-{
-  root~ search .usage:n = general,
-	root~ search .bool_set:N = \l__pgfkeysearch_root_bool,
-  root~ search .initial:n = {false},
-}
-\ProcessKeyOptions [pgfkeysearch] 
 
+\cs_set_eq:NN \__pgfkeysearch_exp_arg:NNw \exp_args:NNv
+\cs_set_eq:NN \__pgfkeysearch_tl_clear:N \tl_clear:N
+\cs_set_eq:NN \__pgfkeysearch_if_root_search:Nn \use_none:nn
+
+\keys_define:nn { pgfkeysearch }
+{  
+  root~ search  .usage:n = general ,
+  root~ search  .choices:nn = 
+    { {} , true , false  } 
+    { 
+      \str_if_eq:VnTF \l_keys_choice_str {false}
+        { \cs_set_eq:NN \__pgfkeysearch_if_root_search:Nn \use_none:nn }
+        { \cs_set_eq:NN \__pgfkeysearch_if_root_search:Nn \seq_put_right:Nn  }
+    }  ,
+
+  key .usage:n = general,
+	key .choice:,
+  key / value .code:n = { \cs_set_eq:NN \__pgfkeysearch_exp_arg:NNw \exp_args:NNv } ,
+  key / macro .code:n = { \cs_set_eq:NN \__pgfkeysearch_exp_arg:NNw \exp_args:NNc } ,
+  key .value_required:n = true ,
+
+  settings .usage:n = general,
+	settings .choice:,
+  settings / old .code:n = 
+    {
+      \cs_set_eq:NN \__pgfkeysearch_tl_clear:N \use_none:n
+
+      \cs_set_eq:NN \pgfkeysearchvalueof    \__pgfkeysearch_old_valueof:nnN
+      \cs_set_eq:NN \pgfkeysearchvalueofTF  \__pgfkeysearch_old_valueofTF:nnNTF
+      \cs_set_eq:NN \pgfkeygetvalueof       \__pgfkeysearch_old_getvalueof:nnN
+      \cs_set_eq:NN \pgfkeygetvalueofTF     \__pgfkeysearch_old_getvalueofTF:nnNTF
+      \cs_set_eq:NN \pgfkeysearch           \pgfkeysearchvalueof
+      \cs_set_eq:NN \pgfkeysearchTF         \pgfkeysearchvalueofTF
+      \cs_set_eq:NN \pgfkeyget              \pgfkeygetvalueof
+      \cs_set_eq:NN \pgfkeygetTF            \pgfkeygetvalueofTF
+    } ,
+  settings / new .code:n = 
+    {
+      \cs_set_eq:NN \__pgfkeysearch_tl_clear:N \tl_clear:N
+
+      \cs_set_eq:NN \pgfkeysearchvalueof    \pgfkeysearch_multipath_keysearch:nnN
+      \cs_set_eq:NN \pgfkeysearchvalueofTF  \pgfkeysearch_multipath_keysearch:nnNTF
+      \cs_set_eq:NN \pgfkeygetvalueof       \pgfkeysearch_keyget:nnN
+      \cs_set_eq:NN \pgfkeygetvalueofTF     \pgfkeysearch_keyget:nnNTF
+      \cs_set_eq:NN \pgfkeysearch           \pgfkeysearchvalueof
+      \cs_set_eq:NN \pgfkeysearchTF         \pgfkeysearchvalueofTF
+      \cs_set_eq:NN \pgfkeyget              \pgfkeygetvalueof
+      \cs_set_eq:NN \pgfkeygetTF            \pgfkeygetvalueofTF
+    } ,
+	settings .value_required:n = true ,
+}
+
+  
 \cs_new_protected:Npn \pgfkeysearch_settings:n #1
-  {
-    \keys_set:nn {pgfkeysearch}{#1}
+  { 
+    \keys_set:nn {pgfkeysearch}{#1} 
   } 
 
 %%%%%%%%%%%%%%%
 %%%
 %%% _keysearch allows to find a key, 
-%%% if it's defined from 'anywhere' in the tree. I mean, upwards until, likely, /tikz/<key>
+%%% if it's defined 'anywhere' in the tree. I mean, upwards until, likely, /some/<key>
 %%% if it isn't defined, returns nothing (no error triggered)
 %%%
 %%%%%%%%%%%%%%%
@@ -83,6 +129,68 @@
 \tl_new:N  \l__pgfkeysearch_path_tl
 
 \cs_generate_variant:Nn \tl_set:Nn {Ne}
+
+
+%%%%%%%%%%%%%%%
+%%%
+%%% This will create a pair
+%%%                  *none* expandable
+%%% #cmd:signature#    => cs
+%%% #cmd:signature#TF  => prg
+%%%
+%%%%%%%%%
+%%%
+%%% #1 -> #cmd:signature#           => base-name
+%%% #2 -> base-code                 
+%%%
+%%%%%%%%%%%%%%%
+\regex_const:Nn \c__pgfkeysearch_rtn_regex {\c{__pgfkeysearch_set_rtn_true:}|\c{__pgfkeysearch_set_rtn_false:}}
+\cs_new_protected:Npn \__pgfkeysearch_duo_new:Nn #1#2
+  {
+    \tl_set:Nn \l__pgfkeysearch_tmpa_tl {#2}
+    \regex_replace_all:NnN \c__pgfkeysearch_rtn_regex {} \l__pgfkeysearch_tmpa_tl
+    \__pgfkeysearch_duo_aux:NVn #1 \l__pgfkeysearch_tmpa_tl {#2} 
+  }
+
+\cs_new_protected:Npn \__pgfkeysearch_duo_aux:Nnn #1#2#3
+  {
+    \cs_new_protected:Nn #1
+      { #2 }
+    \prg_new_protected_conditional:Nnn #1 {T , F , TF}
+      {
+        #3
+        \__pgfkeysearch_return:
+      }
+  }
+\cs_generate_variant:Nn   \__pgfkeysearch_duo_aux:Nnn {NV}
+
+
+%%%%%%%%%%%%%%%
+%%% so that they can be easily removed (if needed) by _duo_new:Nn
+%%%%%%%%%%%%%%%
+\cs_new:Npn \__pgfkeysearch_set_rtn_true:
+  { \cs_set_eq:NN \__pgfkeysearch_return: \prg_return_true: }
+\cs_new:Npn \__pgfkeysearch_set_rtn_false:
+  { \cs_set_eq:NN \__pgfkeysearch_return: \prg_return_false: }
+
+%%%%%%%%%%%%%%%
+%%%
+%%% This is, basicaly, \pgfkeysvalueof
+%%% but, assigning the found value (if any) to #3
+%%%
+%%%%%%%%%%%%%%%
+\__pgfkeysearch_duo_new:Nn \pgfkeysearch_keyget:nnN
+  {
+    \cs_if_exist:cTF {pgfk@#1/#2}
+      {
+        \__pgfkeysearch_exp_arg:NNw \tl_set:Nn #3 {pgfk@#1/#2}            
+        \__pgfkeysearch_set_rtn_true:
+      }
+      {
+        \__pgfkeysearch_tl_clear:N #3
+        \__pgfkeysearch_set_rtn_false:
+      }
+  }
 
 %%%%%%%%%%%%%%%
 %%%
@@ -95,15 +203,16 @@
 %%%    stoping at the first hit
 %%%
 %%%%%%%%%%%%%%%
-\prg_new_protected_conditional:Npnn \pgfkeysearch_keysearch:nnN #1#2#3 {TF,T,F}
+\__pgfkeysearch_duo_new:Nn \pgfkeysearch_keysearch:nnN
   {
     \seq_set_split:Nne \l__pgfkeysearch_pathterms_seq {/} {#1}
     \seq_remove_all:Nn \l__pgfkeysearch_pathterms_seq {}
     \tl_clear:N \l__pgfkeysearch_path_tl
     \seq_clear:N \l__pgfkeysearch_pathtree_seq
-    \bool_if:NTF \l__pgfkeysearch_root_bool
-      { \seq_put_right:Nn \l__pgfkeysearch_pathtree_seq {} }
-      {}
+
+    \__pgfkeysearch_if_root_search:Nn
+       \l__pgfkeysearch_pathtree_seq {}
+
     \seq_map_inline:Nn \l__pgfkeysearch_pathterms_seq
       {
         \tl_put_right:Nn \l__pgfkeysearch_path_tl {/##1}
@@ -111,19 +220,19 @@
       }
     \seq_reverse:N \l__pgfkeysearch_pathtree_seq
 
-    \cs_set_eq:NN \__pgfkeysearch_return: \prg_return_false:
+    \__pgfkeysearch_set_rtn_false:
+    \__pgfkeysearch_tl_clear:N #3
     
     \seq_map_inline:Nn \l__pgfkeysearch_pathtree_seq
       {
         \cs_if_exist:cTF {pgfk@##1/#2}
           {
-            \tl_set:Ne #3 {\exp_not:c{pgfk@##1/#2}}
-            \cs_set_eq:NN \__pgfkeysearch_return: \prg_return_true:
+            \__pgfkeysearch_exp_arg:NNw \tl_set:Nn #3 {pgfk@##1/#2}            
+            \__pgfkeysearch_set_rtn_true:
             \seq_map_break:
           }
-          {}
+          { }
       }
-    \__pgfkeysearch_return:
   }
 
  
@@ -149,16 +258,16 @@
 %%% it searchs for a key in every path, stoping at the first hit.
 %%%
 %%%%%%%%%%%%%%%
-\prg_new_protected_conditional:Npnn \pgfkeysearch_multipath_keysearch:nnN #1#2#3 {T,F,TF}
+\__pgfkeysearch_duo_new:Nn \pgfkeysearch_multipath_keysearch:nnN
   {
-    \bool_set_false:N \l__pgfkeysearch_multipath_keyfound_bool
-    \clist_map_inline:nn {#1}
+    \seq_set_from_clist:Nn \l__pgfkeysearch_tmpa_seq {#1}
+    
+    \seq_map_inline:Nn \l__pgfkeysearch_tmpa_seq
       {
         \pgfkeysearch_keysearch:nnNTF {##1}{#2} #3
-          { \clist_map_break: }
+          { \seq_map_break: }
           {}
       }
-    \__pgfkeysearch_return:
   }
  
 \cs_new_protected:Npn \pgfkeysearch_multipath_keysearch:nnnTF
@@ -180,7 +289,7 @@
 
 %%%%%%%%%%%%%%%
 %%%
-%%% The caveats: this isn't expandable.
+%%% The caveats: none of this is expandable.
 %%%
 %%%%%%%%%%%%%%%
 %%%
@@ -191,24 +300,42 @@
 %%%
 %%%%%%%%%%%%%%%
 
-\NewDocumentCommand{\pgfkeysearchsettings}{m}
-  { \pgfkeysearch_settings:n {#1} }
+%\NewDocumentCommand{\pgfkeysearchsettings}{m}
+%  { \pgfkeysearch_settings:n {#1} }
+\cs_new_eq:NN \pgfkeysearchsettings \pgfkeysearch_settings:n
 
-\NewDocumentCommand{\pgfkeysearchvalueof}{mmm}
+\cs_new:Npn \__pgfkeysearch_old_valueof:nnN #1#2#3
   {
-    \pgfkeysearch_multipath_keysearch:nnNTF {#1}{#2}#3
-      { }
-      { \tl_set:Nn #3 {} }
+        \pgfkeysearch_multipath_keysearch:nnNTF {#1}{#2}#3
+          { }
+          { \tl_clear:N #3 }    
   }
-\let\pgfkeysearch\pgfkeysearchvalueof
-
-\NewDocumentCommand{\pgfkeysearchvalueofTF}{mmmmm}
+\cs_new:Npn \__pgfkeysearch_old_valueofTF:nnNTF #1#2#3#4#5
   {
     \pgfkeysearch_multipath_keysearch:nnNTF {#1}{#2}#3
       { #4 }
       { 
-        \tl_set:Nn #3 {} 
+        \tl_clear:N #3
         #5
       }
   }
-\let\pgfkeysearchTF\pgfkeysearchvalueofTF
+\cs_new:Npn \__pgfkeysearch_old_getvalueof:nnN #1#2#3
+  {
+    \pgfkeysearch_keyget:nnNTF {#1}{#2}#3
+      { }
+      { \tl_clear:N #3 }
+  }
+\cs_new:Npn \__pgfkeysearch_old_getvalueofTF:nnNTF #1#2#3#4#5
+  {
+    \pgfkeysearch_keyget:nnNTF {#1}{#2}#3
+      { #4 }
+      { 
+        \tl_clear:N #3
+        #5
+      }
+  }
+  
+\keys_set:nn {pgfkeysearch}{settings=new}  
+
+\ProcessKeyOptions [pgfkeysearch] 
+

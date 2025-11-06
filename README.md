@@ -51,7 +51,12 @@ The Current Maintainer of this work is Alceu Frigeri
 -------------
 
 ## Changelog
-* Version 1.4a (this)
+* Version 1.5 (this)
+    - changing default expl behavior (clearing assigned var when not found)
+    - new package's options: one to keep old behavior, another changing the recovery strategy.
+    - adding non branching variants, adding 'no search' variant.
+
+* Version 1.4a
     - switching over pkginfograb package's info
     - a bit of code clean up/optimization.
 
